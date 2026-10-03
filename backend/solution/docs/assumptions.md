@@ -71,7 +71,7 @@ Every decision the spec (`backend/REQUIREMENTS.md`) leaves open. Numbers are per
 
 ## Task 7: Currency
 
-**A26. The rate is fixed: 1 CAD = 0.73 USD (seed `CADtoUSD`), configurable.** For CAD the rate is 1. Every portfolio's native currency is CAD. *(Answers Q23.)*
+**A26. USD uses Frankfurter's latest published CAD→USD daily reference rate.** The no-key `GET /v2/rate/cad/usd` endpoint is configurable through `currency-rate.base-url`; CAD uses rate 1. A malformed, non-positive, unavailable or failed rate response is `502 currency_rate_unavailable`. Every portfolio's native currency is CAD. Replaced the fixture's static 0.73 rate on 2026-10-03 at the user's request. *(Answers Q23.)*
 
 **A27. Array responses stay arrays; every element carries `currency` and `exchangeRate`.** `GET /portfolios/:id` carries both at the top level. Both fields are always present, also without the query param. An empty array carries neither. *(Answers Q1.)*
 

@@ -1,8 +1,8 @@
 # Backend solution
 
 Implemented: Task 1 portfolio metadata through the external CRM, Task 2 holdings,
-Task 3 performance history, Task 4 authentication, Task 5 asset allocation, and
-Task 10 ledger replay. Java 21,
+Task 3 performance history, Task 4 authentication, Task 5 asset allocation, Task 7
+live currency display, and Task 10 ledger replay. Java 21,
 Spring Boot 4.1.1, and Maven. No additional dependencies or database are needed.
 
 ## Run
@@ -53,6 +53,9 @@ Configuration:
 | `crm.read-timeout` | `2s` | Socket read timeout |
 | `history.file` | `file:../fixtures/performance-history.json` | Generated performance-history fixture; also settable with `HISTORY_FILE` |
 | `auth.token` | `superday-demo-token` | The one valid bearer token; also settable with `AUTH_TOKEN` |
+| `currency-rate.base-url` | `https://api.frankfurter.dev` | Latest daily CAD/USD reference-rate service; also settable with `CURRENCY_RATE_BASE_URL` |
+| `currency-rate.connect-timeout` | `1s` | Currency service connection timeout |
+| `currency-rate.read-timeout` | `2s` | Currency service read timeout |
 
 ## Test
 
@@ -106,6 +109,12 @@ root before starting the service:
 node backend/fixtures/generate-history.mjs
 ```
 
+Add `?currency=CAD|USD` to portfolio metadata, holdings, or performance-history.
+The default is CAD; USD values use Frankfurter's latest published daily CAD/USD
+reference rate and each response reports its `currency` and `exchangeRate`.
+Money converts before output rounding. If the rate service is unavailable or its
+response is invalid, the request returns `502 currency_rate_unavailable`.
+
 Set the CRM's global mode; the backend deliberately sends no `mode` query:
 
 ```powershell
@@ -123,7 +132,7 @@ Task 1 has no retries or caching; HTTP redirects are rejected. Connect and read
 timeouts bound stalled operations, rather than imposing a total download deadline.
 No local data is persisted. Caching/stale fallback belongs to Task 9 and is not
 implemented yet. Task 2's holdings read their quantity and cost basis from Task
-10's ledger replay. Tasks 1–5 and 10 are implemented; Tasks 6–9 remain.
+10's ledger replay. Tasks 1–5, 7 and 10 are implemented; Tasks 6, 8 and 9 remain.
 
 Decisions are recorded in `docs/assumptions.md`; structure and extension points
 are recorded in `docs/architecture.md`.

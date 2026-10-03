@@ -131,14 +131,14 @@ Tests:
 
 `?currency=CAD|USD` on `GET /portfolios/:id`, `/holdings` and `/performance-history`. Default CAD.
 
-Rules: rate CAD→USD is 0.73; CAD→CAD is 1 (A26). Each response carries `currency` and `exchangeRate`: top level on the portfolio object, on every element of the arrays (A27).
+Rules: rate CAD→USD is Frankfurter's latest published daily reference rate; CAD→CAD is 1 (A26). Each response carries `currency` and `exchangeRate`: top level on the portfolio object, on every element of the arrays (A27).
 Converted: `totalMarketValue`, `dayChangeAmount`, `marketValue`, `price`, `previousClosePrice`, `costBasisPerShare`, `unrealizedGainLoss`. Not converted: `quantity`, `weightPercent`, `dayChangePercent`, `totalReturnSinceInception`.
 Convert the full-precision CAD value, then round (A28). `null` stays `null`.
 
 Edge cases, from the spec: unsupported currency → 400, no fallback. The three endpoints agree. Rounding keeps summed holdings ≈ portfolio total.
 Found by us: the cache holds CAD and conversion happens after it; history uses today's rate; `currency=usd` → 400 (A6).
 
-Tests (`?currency=USD`):
+Tests (`?currency=USD`) use a fake rate of `0.73`:
 - `P-9001` portfolio → `currency "USD"`, `exchangeRate 0.73`, `totalMarketValue` 48930 × 0.73 = `35718.90`, `dayChangeAmount` 30 × 0.73 = `21.90`, `dayChangePercent 0.000613` unchanged.
 - `AAPL` → `price 166.08` (166.075 rounded), `costBasisPerShare 146.00`, `previousClosePrice 164.25`, `marketValue 19929.00`, gain `2409.00`, day `219.00`; `quantity 120` and `weightPercent 0.557940` unchanged.
 - `BND` → `price 52.63`, `marketValue 15789.90`, gain `-416.10`, day `-197.10`.

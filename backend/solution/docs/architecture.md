@@ -1,7 +1,7 @@
 # Architecture
 
 The design for the ten tasks in `requirements.md`. Decisions the spec leaves open are in `assumptions.md` (A-numbers).
-Built so far: `crm` and the portfolio metadata endpoint (Task 1); holdings and allocation in `holding` (Tasks 2 and 5); performance history in `history` (Task 3); `ledger` (Task 10); and in `common` the auth filter (Task 4), error body, exception handler, UTC clock, rounding and seed loader. The client and cache packages remain future work.
+Built so far: `crm` and the portfolio metadata endpoint (Task 1); holdings and allocation in `holding` (Tasks 2 and 5); performance history in `history` (Task 3); display conversion and the Frankfurter rate client in `currency` (Task 7); `ledger` (Task 10); and in `common` the auth filter (Task 4), error body, exception handler, UTC clock, rounding and seed loader. The client and cache packages remain future work.
 
 ## 1. Decisions at a glance
 
@@ -20,7 +20,8 @@ Built so far: `crm` and the portfolio metadata endpoint (Task 1); holdings and a
 
 ```
 src/main/java/ca/en/solution
-├── common      error body, exception handler, auth filter (Task 4), clock, rounding, currency (Task 7)
+├── common      error body, exception handler, auth filter (Task 4), clock and rounding
+├── currency    Frankfurter daily CAD/USD rate client and response conversion (Task 7)
 ├── crm         CRM client interface, HTTP client, mapper to our records (Task 1)
 ├── portfolio   GET /portfolios/{id} (Task 1) and its cache (Task 9)
 ├── holding     holdings list and calculations (Task 2), allocation (Task 5), detail by ticker (Task 8)
@@ -71,8 +72,7 @@ sequenceDiagram
 
 ## 4. External calls
 
-The mock CRM (`http://localhost:4002`, set by `crm.base-url`) is the only external system. Only Task 1 calls it.
-Timeouts: 1 s to connect, 2 s to read. No retry. The cache steps arrive with Task 9.
+The mock CRM (`http://localhost:4002`, set by `crm.base-url`) and Frankfurter (`https://api.frankfurter.dev`, set by `currency-rate.base-url`) are external systems. Task 1 calls the CRM; Task 7 fetches Frankfurter's latest daily CAD/USD reference rate only for USD display requests. Both use 1 s connection and 2 s read timeouts, with no retry. The CRM cache steps arrive with Task 9.
 
 Implemented Task 1 flow:
 

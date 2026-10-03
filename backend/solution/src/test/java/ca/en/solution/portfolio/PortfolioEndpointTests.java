@@ -3,6 +3,7 @@ package ca.en.solution.portfolio;
 import ca.en.solution.crm.CrmClient;
 import ca.en.solution.crm.CrmUnavailableException;
 import ca.en.solution.crm.HttpCrmClient;
+import ca.en.solution.currency.CurrencyRateClient;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -12,12 +13,16 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
@@ -102,9 +107,27 @@ class PortfolioEndpointTests {
                          "dayChangePercent":0.000613,"totalReturnSinceInception":0.187,
                          "asOf":"2026-10-03T12:00:00Z"}
                         """))
-                .andExpect(jsonPath("$.length()").value(9));
+                .andExpect(jsonPath("$.length()").value(10));
         assertEquals("/crm/portfolios/P-9001", REQUEST_URI.get());
         assertEquals(1, CALLS.get());
+    }
+
+    @Test
+    void convertsPortfolioMoneyWithTheLatestUsdRate() throws Exception {
+        mvc.perform(get("/portfolios/P-9001?currency=USD").header("Authorization", AUTH))
+                .andExpect(status().isOk())
+                .andExpect(content().json("""
+                        {"portfolioId":"P-9001","clientId":"abc123","label":"Taxable Brokerage",
+                         "currency":"USD","exchangeRate":0.73,"totalMarketValue":35718.90,
+                         "dayChangeAmount":21.90,"dayChangePercent":0.000613,
+                         "totalReturnSinceInception":0.187,"asOf":"2026-10-03T12:00:00Z"}
+                        """));
+
+        mvc.perform(get("/portfolios/P-9001?currency=usd").header("Authorization", AUTH))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().json("""
+                        {"error":"bad_request","message":"currency must be one of: CAD, USD."}
+                        """));
     }
 
     @Test
@@ -155,11 +178,11 @@ class PortfolioEndpointTests {
         mvc.perform(get("/portfolios/P-9001").header("Authorization", AUTH))
                 .andExpect(status().isOk())
                 .andExpect(content().json("""
-                        {"portfolioId":"P-9001","clientId":null,"label":null,"currency":null,
-                         "totalMarketValue":null,"dayChangeAmount":null,"dayChangePercent":null,
+                        {"portfolioId":"P-9001","clientId":null,"label":null,"currency":"CAD",
+                         "exchangeRate":1,"totalMarketValue":null,"dayChangeAmount":null,"dayChangePercent":null,
                          "totalReturnSinceInception":null,"asOf":null}
                         """))
-                .andExpect(jsonPath("$.length()").value(9));
+                .andExpect(jsonPath("$.length()").value(10));
     }
 
     @Test
@@ -317,6 +340,15 @@ class PortfolioEndpointTests {
             return server;
         } catch (IOException e) {
             throw new ExceptionInInitializerError(e);
+        }
+    }
+
+    @TestConfiguration
+    static class CurrencyRateConfig {
+        @Bean
+        @Primary
+        CurrencyRateClient fixedCurrencyRateClient() {
+            return () -> new BigDecimal("0.73");
         }
     }
 

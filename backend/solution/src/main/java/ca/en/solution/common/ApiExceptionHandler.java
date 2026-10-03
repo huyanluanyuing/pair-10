@@ -1,6 +1,7 @@
 package ca.en.solution.common;
 
 import ca.en.solution.crm.CrmUnavailableException;
+import ca.en.solution.currency.CurrencyRateUnavailableException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -24,5 +25,11 @@ public class ApiExceptionHandler {
     public ResponseEntity<ApiError> crmUnavailable(CrmUnavailableException exception) {
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
                 .body(new ApiError("crm_unavailable", exception.getMessage()));
+    }
+
+    @ExceptionHandler(CurrencyRateUnavailableException.class)
+    public ResponseEntity<ApiError> currencyRateUnavailable(CurrencyRateUnavailableException exception) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(new ApiError("currency_rate_unavailable", exception.getMessage()));
     }
 }

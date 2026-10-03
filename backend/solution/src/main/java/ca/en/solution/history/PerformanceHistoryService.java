@@ -35,7 +35,6 @@ public class PerformanceHistoryService {
                 .filter(snapshot -> !snapshot.date().isAfter(today))
                 .filter(snapshot -> start == null || !snapshot.date().isBefore(start))
                 .sorted(Comparator.comparing(PerformanceSnapshot::date))
-                .map(PerformanceSnapshot::rounded)
                 .toList();
     }
 

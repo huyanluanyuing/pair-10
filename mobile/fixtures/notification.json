@@ -1,0 +1,5 @@
+{
+  "title": "Portfolio Alert",
+  "body": "Your portfolio has been updated",
+  "data": { "portfolioId": "P-9002", "type": "portfolio_alert" }
+}

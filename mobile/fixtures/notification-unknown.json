@@ -1,0 +1,5 @@
+{
+  "title": "Portfolio Alert",
+  "body": "A portfolio is no longer available",
+  "data": { "portfolioId": "P-UNKNOWN", "type": "portfolio_alert" }
+}

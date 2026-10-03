@@ -1,8 +1,8 @@
 # Backend solution
 
 Implemented: Task 1 portfolio metadata through the external CRM, Task 2 holdings,
-Task 3 performance history, Task 4 authentication, Task 5 asset allocation, and
-Task 10 ledger replay. Java 21,
+Task 3 performance history, Task 4 authentication, Task 5 asset allocation,
+Task 6 client portfolios and household summary, and Task 10 ledger replay. Java 21,
 Spring Boot 4.1.1, and Maven. No additional dependencies or database are needed.
 
 ## Run
@@ -96,6 +96,14 @@ full-precision values by asset class, then rounds values to two decimals and
 percentages to six decimals. Both return `[]` for `P-EMPTY`; unknown portfolios
 return the structured 404.
 
+`GET /clients/{clientId}/portfolios` lists a client's portfolios, ordered by id,
+each with its total market value. `GET /clients/{clientId}/household-summary`
+sums them: total value, portfolio count (empty portfolios count), day change, and
+a day-change percentage weighted by value: total day change divided by total
+previous-close value, `null` when that value is 0. Both use the same holdings
+calculation as the endpoints above and return the structured 404 for an unknown
+client.
+
 `GET /portfolios/{id}/performance-history?range=1D|1M|YTD|1Y|All` reads the
 generated history fixture, filters inclusively through today's UTC date, and
 sorts ascending by date. Omitting `range` means `All`; an invalid value returns
@@ -123,7 +131,7 @@ Task 1 has no retries or caching; HTTP redirects are rejected. Connect and read
 timeouts bound stalled operations, rather than imposing a total download deadline.
 No local data is persisted. Caching/stale fallback belongs to Task 9 and is not
 implemented yet. Task 2's holdings read their quantity and cost basis from Task
-10's ledger replay. Tasks 1–5 and 10 are implemented; Tasks 6–9 remain.
+10's ledger replay. Tasks 1–6 and 10 are implemented; Tasks 7–9 remain.
 
 Decisions are recorded in `docs/assumptions.md`; structure and extension points
 are recorded in `docs/architecture.md`.

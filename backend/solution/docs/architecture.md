@@ -1,7 +1,7 @@
 # Architecture
 
 The design for the ten tasks in `requirements.md`. Decisions the spec leaves open are in `assumptions.md` (A-numbers).
-Built so far: `crm` and the portfolio metadata endpoint (Task 1); holdings and allocation in `holding` (Tasks 2 and 5); performance history in `history` (Task 3); `ledger` (Task 10); and in `common` the auth filter (Task 4), error body, exception handler, UTC clock, rounding and seed loader. The client and cache packages remain future work.
+Built so far: `crm` and the portfolio metadata endpoint (Task 1); holdings and allocation in `holding` (Tasks 2 and 5); performance history in `history` (Task 3); client portfolios and the household summary in `client` (Task 6); `ledger` (Task 10); and in `common` the auth filter (Task 4), error body, exception handler, UTC clock, rounding and seed loader. Currency (Task 7), holding detail (Task 8) and the CRM cache (Task 9) remain future work.
 
 ## 1. Decisions at a glance
 

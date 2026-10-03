@@ -13,7 +13,11 @@ import ca.en.solution.ledger.TransactionType;
  * A holding row has no quantity or cost: those come from replaying its transactions.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record SeedData(List<PortfolioRow> portfolios, List<HoldingRow> holdings, List<TransactionRow> transactions) {
+public record SeedData(List<ClientRow> clients, List<PortfolioRow> portfolios, List<HoldingRow> holdings,
+        List<TransactionRow> transactions) {
+
+    public record ClientRow(String clientId, String name) {
+    }
 
     public record PortfolioRow(String portfolioId, String clientId, String label, String currency) {
     }
@@ -25,6 +29,14 @@ public record SeedData(List<PortfolioRow> portfolios, List<HoldingRow> holdings,
 
     public record TransactionRow(String transactionId, String holdingId, TransactionType type, BigDecimal quantity,
             BigDecimal price, LocalDate date) {
+    }
+
+    public boolean hasClient(String clientId) {
+        return clients.stream().anyMatch(client -> client.clientId().equals(clientId));
+    }
+
+    public List<PortfolioRow> portfoliosOf(String clientId) {
+        return portfolios.stream().filter(portfolio -> portfolio.clientId().equals(clientId)).toList();
     }
 
     public boolean hasPortfolio(String portfolioId) {

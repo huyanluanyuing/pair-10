@@ -20,6 +20,7 @@ class HoldingServiceTest {
 
     // Stored out of ticker order on purpose, with a second portfolio that also holds AAPL.
     private static final SeedData DATA = new SeedData(
+            List.of(),
             List.of(new PortfolioRow("P-1", "c1", "Main", "CAD"),
                     new PortfolioRow("P-2", "c1", "Other", "CAD"),
                     new PortfolioRow("P-EMPTY", "c1", "Empty", "CAD")),

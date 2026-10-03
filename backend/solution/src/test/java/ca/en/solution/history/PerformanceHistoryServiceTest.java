@@ -28,7 +28,7 @@ class PerformanceHistoryServiceTest {
     }
 
     private static SeedData seedData() {
-        return new SeedData(List.of(new PortfolioRow("P-1", "C-1", "Main", "CAD")), List.of(), List.of());
+        return new SeedData(List.of(), List.of(new PortfolioRow("P-1", "C-1", "Main", "CAD")), List.of(), List.of());
     }
 
     private static PerformanceSnapshot snapshot(String date) {

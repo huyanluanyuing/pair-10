@@ -89,6 +89,7 @@ Tests:
 - Valid header → 200 from the endpoint.
 - No header on an unknown portfolio → 401, not 404.
 - Every route is protected: `/portfolios`, `/clients`, `/holdings`.
+- No header on a route that does not exist → 401, not 404 (A36).
 
 ## Task 5: Asset allocation
 

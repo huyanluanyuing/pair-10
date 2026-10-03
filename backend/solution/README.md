@@ -1,7 +1,8 @@
 # Backend solution
 
-Implemented: Task 1, portfolio metadata through the external CRM, and Task 10,
-ledger replay. Java 21,
+Implemented: Task 1, portfolio metadata through the external CRM; Task 2,
+holdings with calculated fields; Task 4, authentication; and Task 10, ledger
+replay. Java 21,
 Spring Boot 4.1.1, and Maven. No additional dependencies or database are needed.
 
 ## Run
@@ -31,9 +32,15 @@ the cached Maven command above avoids that existing wrapper issue.
 
 The API runs on port 3000. Override `server.port` if necessary.
 
+Every request must send the mock auth token (Task 4):
+`Authorization: Bearer superday-demo-token`. Anything else, including a missing
+header, a missing `Bearer ` prefix or a wrong token, returns 401.
+
 ```powershell
-Invoke-RestMethod http://localhost:3000/portfolios/P-9001
-Invoke-RestMethod http://localhost:3000/portfolios/P-9002
+$auth = @{ Authorization = 'Bearer superday-demo-token' }
+Invoke-RestMethod http://localhost:3000/portfolios/P-9001 -Headers $auth
+Invoke-RestMethod http://localhost:3000/portfolios/P-9002 -Headers $auth
+Invoke-RestMethod http://localhost:3000/portfolios/P-9001/holdings -Headers $auth
 ```
 
 Configuration:
@@ -44,6 +51,7 @@ Configuration:
 | `crm.base-url` | `http://localhost:4002` | CRM URL; also settable with `CRM_BASE_URL` |
 | `crm.connect-timeout` | `1s` | Connection timeout |
 | `crm.read-timeout` | `2s` | Socket read timeout |
+| `auth.token` | `superday-demo-token` | The one valid bearer token; also settable with `AUTH_TOKEN` |
 
 ## Test
 
@@ -77,6 +85,7 @@ Errors have exactly `{ "error": "...", "message": "..." }`:
 
 | Condition | HTTP | Error code |
 | --- | --- | --- |
+| Missing or invalid `Authorization` header, on any path | 401 | `unauthorized` |
 | CRM 404 or no matching account | 404 | `not_found` |
 | Other non-2xx status, malformed structure/JSON, timeout or connection failure | 502 | `crm_unavailable` |
 
@@ -84,7 +93,7 @@ Set the CRM's global mode; the backend deliberately sends no `mode` query:
 
 ```powershell
 Invoke-RestMethod -Method Post -Uri http://localhost:4002/__control -ContentType application/json -Body '{"mode":"ok"}'
-Invoke-RestMethod http://localhost:3000/portfolios/P-9002
+Invoke-RestMethod http://localhost:3000/portfolios/P-9002 -Headers $auth
 ```
 
 Repeat with `nested` (same mapping), `missing` (null label and value), `error`
@@ -95,10 +104,9 @@ In `ok` mode, request an unknown id for 404. Restore `auto` after checking.
 
 Task 1 has no retries or caching; HTTP redirects are rejected. Connect and read
 timeouts bound stalled operations, rather than imposing a total download deadline.
-No local data is persisted. Authentication belongs to Task 4 and caching/stale
-fallback to Task 9; neither is implemented yet. No auth token is required for
-this Task 1 endpoint. Task 10's ledger replay is also implemented and covered by
-unit tests; Tasks 2–9 remain to be implemented.
+No local data is persisted. Caching/stale fallback belongs to Task 9 and is not
+implemented yet. Task 2's holdings read their quantity and cost basis from Task
+10's ledger replay. Tasks 3 and 5–9 remain to be implemented.
 
 Decisions are recorded in `docs/assumptions.md`; structure and extension points
 are recorded in `docs/architecture.md`.

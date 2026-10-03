@@ -1,5 +1,6 @@
 package ca.en.solution.crm;
 
+import ca.en.solution.common.Rounding;
 import ca.en.solution.portfolio.PortfolioMetadata;
 import ca.en.solution.portfolio.PortfolioNotFoundException;
 
@@ -13,7 +14,6 @@ import org.springframework.web.client.RestClientException;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.net.HttpURLConnection;
 import java.time.Duration;
 import java.util.List;
@@ -74,15 +74,11 @@ public class HttpCrmClient implements CrmClient {
         return new PortfolioMetadata(
                 account.reference(), client.clientId(), account.nickname(),
                 account.currentValue() == null ? null : account.currentValue().currency(),
-                rounded(account.currentValue() == null ? null : account.currentValue().amount(), 2),
-                rounded(account.dayChange() == null ? null : account.dayChange().amount(), 2),
-                rounded(account.dayChange() == null ? null : account.dayChange().percent(), 6),
-                rounded(account.inceptionPercent(), 6),
+                Rounding.money(account.currentValue() == null ? null : account.currentValue().amount()),
+                Rounding.money(account.dayChange() == null ? null : account.dayChange().amount()),
+                Rounding.ratio(account.dayChange() == null ? null : account.dayChange().percent()),
+                Rounding.ratio(account.inceptionPercent()),
                 response.meta() == null ? null : response.meta().retrievedAt());
-    }
-
-    private static BigDecimal rounded(BigDecimal value, int scale) {
-        return value == null ? null : value.setScale(scale, RoundingMode.HALF_UP);
     }
 
     // Legacy names and nesting stay at the external boundary.

@@ -23,10 +23,10 @@ How we work with AI assistants: general conventions that apply to any project. P
 
 ## Commands
 
-Fill in once the stack is agreed.
+Java 21, Spring Boot 4.1.1, Maven wrapper. Run from `backend/solution`. On Windows use `.\mvnw.cmd` in place of `./mvnw`.
 
-- Test: `TODO`
-- Run: `TODO`
+- Test: `./mvnw test`
+- Run: `./mvnw spring-boot:run`
 
 ## Project docs
 

@@ -47,12 +47,12 @@ Tests:
 Computed at request time, never stored. Ordered by ticker (A15).
 
 Edge cases, from the spec: no holdings → `[]`. `quantity: 0` → zeros, no error. `previousClosePrice: 0` → no divide by zero. Weights are not corrected to sum to 1. Unknown id → 404.
-Found by us: portfolio total of 0; `costBasisPerShare: null` after Task 10 (A17).
+Found by us: portfolio total of 0; `quantity` and `costBasisPerShare` come from ledger replay, so a closed position has `costBasisPerShare: null` (A17).
 
 Tests (`P-9001`, total 27300 + 21630 + 0 = 48930):
 - `AAPL`: 120 × 227.5 = `27300`; weight 27300 ÷ 48930 = `0.557940`; gain (227.5 − 200) × 120 = `3300`; day (227.5 − 225) × 120 = `300`; 2.5 ÷ 225 = `0.011111`.
 - `BND`: 300 × 72.1 = `21630`; weight `0.442060`; gain (72.1 − 74) × 300 = `-570`; day (72.1 − 73) × 300 = `-270`; −0.9 ÷ 73 = `-0.012329`.
-- `ZERO` (quantity 0): `marketValue 0`, `weightPercent 0`, `unrealizedGainLoss 0`, `dayChangeAmount 0`, `dayChangePercent 0.2`.
+- `ZERO` (quantity 0): `costBasisPerShare null`, `marketValue 0`, `weightPercent 0`, `unrealizedGainLoss 0`, `dayChangeAmount 0`, `dayChangePercent 0.2`.
 - `P-9002` `NEW` (previous close 0): `marketValue 500`, `weightPercent 1`, gain `100`, `dayChangeAmount 500`, `dayChangePercent null`.
 - `P-EMPTY` → `[]`. Unknown id → 404. Order is `AAPL, BND, ZERO`.
 

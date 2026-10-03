@@ -41,7 +41,7 @@ Every decision the spec (`backend/REQUIREMENTS.md`) leaves open. Numbers are per
 
 **A16. The portfolio total used for `weightPercent` is the sum of our holdings' market values.** It is not the CRM figure. In the seed the two agree (48930). *(Answers Q3.)*
 
-**A17. Tasks 2 to 9 read `quantity` and `costBasisPerShare` from the seed; after Task 10 they come from replay.** `costBasisPerShare` is nullable from the start, so Task 10 does not change the response shape. With a `null` cost basis and zero quantity, `unrealizedGainLoss` is 0. *(Answers Q4.)*
+**A17. Task 2's `quantity` and `costBasisPerShare` come from replaying the transactions, not from the seed's fields.** Decided 2026-10-03 (MGK), with Task 10 built first. `costBasisPerShare` is `null` for a closed position (`ZERO`), where the seed says 10. With a `null` cost basis and zero quantity, `unrealizedGainLoss` is 0. *(Answers Q4.)*
 
 ## Task 3: Performance history
 

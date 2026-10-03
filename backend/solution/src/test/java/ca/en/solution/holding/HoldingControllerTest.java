@@ -17,6 +17,8 @@ import org.springframework.test.json.JsonCompareMode;
 import org.springframework.test.web.servlet.MockMvc;
 
 import ca.en.solution.portfolio.PortfolioNotFoundException;
+import ca.en.solution.currency.CurrencyContext;
+import ca.en.solution.currency.CurrencyConverter;
 
 @WebMvcTest(HoldingController.class)
 class HoldingControllerTest {
@@ -29,12 +31,17 @@ class HoldingControllerTest {
     @MockitoBean
     private HoldingService holdingService;
 
+    @MockitoBean
+    private CurrencyConverter currencyConverter;
+
     @Test
     void holdingsAreReturnedAsAnArrayWithEveryFieldIncludingNulls() throws Exception {
-        given(holdingService.holdingsOf("P-9002")).willReturn(List.of(new HoldingResponse(
-                "NEW", "New Security", "Equity", new BigDecimal("10"), null, new BigDecimal("50.00"),
-                new BigDecimal("0.00"), new BigDecimal("500.00"), new BigDecimal("1.000000"),
-                new BigDecimal("100.00"), new BigDecimal("500.00"), null)));
+        given(currencyConverter.contextFor(null)).willReturn(new CurrencyContext("CAD", BigDecimal.ONE));
+        given(holdingService.valuationsOf("P-9002")).willReturn(List.of(new HoldingValuation(
+                new HoldingPosition("NEW", "New Security", "Equity", new BigDecimal("10"), null,
+                        new BigDecimal("50.00"), new BigDecimal("0.00")),
+                new BigDecimal("500.00"), new BigDecimal("1.000000"), new BigDecimal("100.00"),
+                new BigDecimal("500.00"), null)));
 
         mockMvc.perform(get("/portfolios/P-9002/holdings").header("Authorization", AUTH))
                 .andExpect(status().isOk())
@@ -51,14 +58,17 @@ class HoldingControllerTest {
                           "weightPercent": 1.000000,
                           "unrealizedGainLoss": 100.00,
                           "dayChangeAmount": 500.00,
-                          "dayChangePercent": null
+                          "dayChangePercent": null,
+                          "currency": "CAD",
+                          "exchangeRate": 1
                         }]
                         """, JsonCompareMode.STRICT));
     }
 
     @Test
     void aPortfolioWithoutHoldingsReturnsAnEmptyArray() throws Exception {
-        given(holdingService.holdingsOf("P-EMPTY")).willReturn(List.of());
+        given(currencyConverter.contextFor(null)).willReturn(new CurrencyContext("CAD", BigDecimal.ONE));
+        given(holdingService.valuationsOf("P-EMPTY")).willReturn(List.of());
 
         mockMvc.perform(get("/portfolios/P-EMPTY/holdings").header("Authorization", AUTH))
                 .andExpect(status().isOk())
@@ -67,7 +77,8 @@ class HoldingControllerTest {
 
     @Test
     void anUnknownPortfolioReturns404WithTheErrorBody() throws Exception {
-        given(holdingService.holdingsOf("UNKNOWN")).willThrow(new PortfolioNotFoundException("UNKNOWN"));
+        given(currencyConverter.contextFor(null)).willReturn(new CurrencyContext("CAD", BigDecimal.ONE));
+        given(holdingService.valuationsOf("UNKNOWN")).willThrow(new PortfolioNotFoundException("UNKNOWN"));
 
         mockMvc.perform(get("/portfolios/UNKNOWN/holdings").header("Authorization", AUTH))
                 .andExpect(status().isNotFound())

@@ -1,6 +1,5 @@
 package ca.en.solution.crm;
 
-import ca.en.solution.common.Rounding;
 import ca.en.solution.portfolio.PortfolioMetadata;
 import ca.en.solution.portfolio.PortfolioNotFoundException;
 
@@ -74,10 +73,10 @@ public class HttpCrmClient implements CrmClient {
         return new PortfolioMetadata(
                 account.reference(), client.clientId(), account.nickname(),
                 account.currentValue() == null ? null : account.currentValue().currency(),
-                Rounding.money(account.currentValue() == null ? null : account.currentValue().amount()),
-                Rounding.money(account.dayChange() == null ? null : account.dayChange().amount()),
-                Rounding.ratio(account.dayChange() == null ? null : account.dayChange().percent()),
-                Rounding.ratio(account.inceptionPercent()),
+                account.currentValue() == null ? null : account.currentValue().amount(),
+                account.dayChange() == null ? null : account.dayChange().amount(),
+                account.dayChange() == null ? null : account.dayChange().percent(),
+                account.inceptionPercent(),
                 response.meta() == null ? null : response.meta().retrievedAt());
     }
 

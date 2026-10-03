@@ -1,7 +1,7 @@
 # Architecture
 
 The design for the ten tasks in `requirements.md`. Decisions the spec leaves open are in `assumptions.md` (A-numbers).
-Built so far: `crm` and the portfolio metadata endpoint (Task 1), the holdings list in `holding` (Task 2), `ledger` (Task 10), and in `common` the auth filter (Task 4), the error body, the exception handler, rounding and the seed loader. The other packages hold only a `package-info.java` until their task lands; the cache steps in section 4 are the agreed target.
+Built so far: `crm` and the portfolio metadata endpoint (Task 1); holdings and allocation in `holding` (Tasks 2 and 5); performance history in `history` (Task 3); `ledger` (Task 10); and in `common` the auth filter (Task 4), error body, exception handler, UTC clock, rounding and seed loader. The client and cache packages remain future work.
 
 ## 1. Decisions at a glance
 
@@ -228,6 +228,6 @@ Reasoning:
 - **The Windows Maven wrapper fails on a null directory property in this environment.**
   `README.md` documents running the existing cached Maven installation directly.
 - **`src/main/resources/seed.json` is a copy of `backend/fixtures/seed.json`.** Acceptable: the app must run on its own. Next step: one source, or a database. Its holdings still carry `quantity` and `costBasisPerShare`; we ignore both and replay the transactions (A17).
-- **Only 401, 404 and 502 use our error body so far.** With a valid token, an unknown route or an unexpected error still gets Spring's default body, without a stack trace. Next step: the 400 handler arrives with Task 3.
+- **Only expected 400, 401, 404 and 502 errors use our error body so far.** With a valid token, an unknown route or an unexpected error still gets Spring's default body, without a stack trace.
 - **A browser on another origin cannot call the API.** There is no CORS setup, and the auth filter also rejects the browser's preflight `OPTIONS` request. Acceptable: this track is tested with an HTTP client. Next step: CORS configuration that lets `OPTIONS` through.
 - **Every web test must send the auth header.** The filter is a `@Component`, so it is active in `@WebMvcTest` slices too. Tests declare the header as a constant.

@@ -22,6 +22,10 @@ public class HoldingService {
     }
 
     public List<HoldingResponse> holdingsOf(String portfolioId) {
+        return valuationsOf(portfolioId).stream().map(HoldingResponse::from).toList();
+    }
+
+    public List<HoldingValuation> valuationsOf(String portfolioId) {
         if (!seedData.hasPortfolio(portfolioId)) {
             throw new PortfolioNotFoundException(portfolioId);
         }
@@ -29,7 +33,7 @@ public class HoldingService {
                 .sorted(Comparator.comparing(HoldingRow::ticker))
                 .map(this::toPosition)
                 .toList();
-        return HoldingCalculator.value(positions).stream().map(HoldingResponse::from).toList();
+        return HoldingCalculator.value(positions);
     }
 
     private HoldingPosition toPosition(HoldingRow holding) {

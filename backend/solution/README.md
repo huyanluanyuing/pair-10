@@ -1,8 +1,8 @@
 # Backend solution
 
-Implemented: Task 1, portfolio metadata through the external CRM; Task 2,
-holdings with calculated fields; Task 4, authentication; and Task 10, ledger
-replay. Java 21,
+Implemented: Task 1 portfolio metadata through the external CRM, Task 2 holdings,
+Task 3 performance history, Task 4 authentication, Task 5 asset allocation, and
+Task 10 ledger replay. Java 21,
 Spring Boot 4.1.1, and Maven. No additional dependencies or database are needed.
 
 ## Run
@@ -51,6 +51,7 @@ Configuration:
 | `crm.base-url` | `http://localhost:4002` | CRM URL; also settable with `CRM_BASE_URL` |
 | `crm.connect-timeout` | `1s` | Connection timeout |
 | `crm.read-timeout` | `2s` | Socket read timeout |
+| `history.file` | `file:../fixtures/performance-history.json` | Generated performance-history fixture; also settable with `HISTORY_FILE` |
 | `auth.token` | `superday-demo-token` | The one valid bearer token; also settable with `AUTH_TOKEN` |
 
 ## Test
@@ -89,6 +90,22 @@ Errors have exactly `{ "error": "...", "message": "..." }`:
 | CRM 404 or no matching account | 404 | `not_found` |
 | Other non-2xx status, malformed structure/JSON, timeout or connection failure | 502 | `crm_unavailable` |
 
+`GET /portfolios/{id}/holdings` calculates the position values from the replayed
+ledger, sorted by ticker. `GET /portfolios/{id}/allocation` groups those
+full-precision values by asset class, then rounds values to two decimals and
+percentages to six decimals. Both return `[]` for `P-EMPTY`; unknown portfolios
+return the structured 404.
+
+`GET /portfolios/{id}/performance-history?range=1D|1M|YTD|1Y|All` reads the
+generated history fixture, filters inclusively through today's UTC date, and
+sorts ascending by date. Omitting `range` means `All`; an invalid value returns
+the structured `400 bad_request`. Generate the runtime fixture from the repository
+root before starting the service:
+
+```powershell
+node backend/fixtures/generate-history.mjs
+```
+
 Set the CRM's global mode; the backend deliberately sends no `mode` query:
 
 ```powershell
@@ -106,7 +123,7 @@ Task 1 has no retries or caching; HTTP redirects are rejected. Connect and read
 timeouts bound stalled operations, rather than imposing a total download deadline.
 No local data is persisted. Caching/stale fallback belongs to Task 9 and is not
 implemented yet. Task 2's holdings read their quantity and cost basis from Task
-10's ledger replay. Tasks 3 and 5–9 remain to be implemented.
+10's ledger replay. Tasks 1–5 and 10 are implemented; Tasks 6–9 remain.
 
 Decisions are recorded in `docs/assumptions.md`; structure and extension points
 are recorded in `docs/architecture.md`.

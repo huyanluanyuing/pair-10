@@ -28,6 +28,10 @@ Java 21, Spring Boot 4.1.1, Maven wrapper. Run from `backend/solution`. On Windo
 - Test: `./mvnw test`
 - Run: `./mvnw spring-boot:run`
 
+See `README.md` for the cached-Maven alternative to the existing Windows wrapper
+issue. Start the CRM separately with `node backend/mock-crm.mjs` from the
+repository root. API port: 3000.
+
 ## Project docs
 
 Written on the day with the skills. Files that don't exist yet are skipped.

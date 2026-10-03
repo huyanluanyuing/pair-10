@@ -1,7 +1,7 @@
 # Architecture
 
 The design for the ten tasks in `requirements.md`. Decisions the spec leaves open are in `assumptions.md` (A-numbers).
-Built so far: `ledger` (Task 10). The other packages hold only a `package-info.java` until their task lands; sections 3 and 4 show the agreed target.
+Built so far: `crm`, the portfolio metadata endpoint, and shared error handling (Task 1), plus `ledger` (Task 10). The other packages hold only a `package-info.java` until their task lands; sections 3 and 4 show the agreed target.
 
 ## 1. Decisions at a glance
 
@@ -73,6 +73,35 @@ sequenceDiagram
 
 The mock CRM (`http://localhost:4002`, set by `crm.base-url`) is the only external system. Only Task 1 calls it.
 Timeouts: 1 s to connect, 2 s to read. No retry. The cache steps arrive with Task 9.
+
+Implemented Task 1 flow:
+
+```mermaid
+flowchart LR
+    HTTP[GET /portfolios/id] --> Controller[PortfolioController]
+    Controller --> Service[PortfolioService]
+    Service --> Interface[crm.CrmClient]
+    Interface --> Client[crm.HttpCrmClient]
+    Client --> CRM[External mock CRM]
+    CRM --> Client
+    Client --> Record[PortfolioMetadata]
+    Record --> HTTP
+    Client -. errors .-> Advice[common.ApiExceptionHandler]
+    Advice -. 404 or 502 JSON .-> HTTP
+```
+
+- `crm.HttpCrmClient` owns private legacy JSON records, normal/nested account
+  selection, and translation to `portfolio.PortfolioMetadata`. Decimal fields
+  deserialize directly as `BigDecimal` and are rounded once at output (A3).
+- Missing values remain null, and all nine public response fields are included.
+  `asOf` is the CRM timestamp; Task 1 does not read a clock or persist local data.
+- `PortfolioService` receives the `CrmClient` interface through constructor
+  injection. The controller calls only the service.
+- `common.ApiExceptionHandler` returns `{ error, message }`: 404 `not_found`
+  for an unknown account, or 502 `crm_unavailable` for an upstream failure.
+- Redirects are disabled so every non-2xx CRM response reaches the status handler.
+- Task 1 has no authentication, cache, or stale fallback yet. The sequence below
+  describes the target once Task 9 is implemented.
 
 ```mermaid
 sequenceDiagram
@@ -168,6 +197,11 @@ Reasoning:
 - **Full app:** one context-load test, and one happy path per endpoint.
 - **Time:** tests build their own fixed `Clock` and move it forward. No test sleeps.
 - **CRM:** a fake behind the client interface returns scripted results, errors and timeouts. One test proves a real timeout against a local stub server.
+- **Implemented Task 1 tests:** `PortfolioEndpointTests` uses the real Spring app,
+  MockMvc and transport against an isolated local HTTP stub. It covers mapping,
+  nested/second accounts, null fields, zeros, exact large-decimal rounding,
+  malformed responses, 404/502 statuses, redirects, connection refusal, and real
+  2-second header/body timeouts. Slow responses use latches, without sleeps.
 - **Order under time pressure:** calculations, edge cases, status codes and error bodies, then one happy path per endpoint.
 
 ## 7. Growth
@@ -189,3 +223,7 @@ Reasoning:
 - **Same-date transactions rely on input order.** Acceptable: dates carry no time. Next step: a timestamp or sequence number on transactions (A35).
 - **Stale CRM data has no maximum age.** Acceptable: the spec sets none. Next step: a stale limit (A32).
 - **The ledger replay has no endpoint yet.** It is used by Task 2 once that lands. Until then it is covered by unit tests only.
+- **Read timeouts bound inactivity, not total streaming duration.** A stalled
+  CRM read times out after 2 seconds; there is no total download deadline.
+- **The Windows Maven wrapper fails on a null directory property in this environment.**
+  `README.md` documents running the existing cached Maven installation directly.

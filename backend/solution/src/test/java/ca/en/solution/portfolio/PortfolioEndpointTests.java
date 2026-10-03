@@ -45,6 +45,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 class PortfolioEndpointTests {
+    private static final String AUTH = "Bearer superday-demo-token";
     private static final String ACCOUNTS = """
             [
               {"acct_ref":"P-9001","acct_nickname":"Taxable Brokerage",
@@ -92,7 +93,7 @@ class PortfolioEndpointTests {
 
     @Test
     void mapsSuccessfulCrmResponseToTheExactPublicSchema() throws Exception {
-        mvc.perform(get("/portfolios/P-9001"))
+        mvc.perform(get("/portfolios/P-9001").header("Authorization", AUTH))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith("application/json"))
                 .andExpect(content().json("""
@@ -108,7 +109,7 @@ class PortfolioEndpointTests {
 
     @Test
     void selectsTheRequestedAccountEvenWhenItIsNotFirst() throws Exception {
-        mvc.perform(get("/portfolios/P-9002"))
+        mvc.perform(get("/portfolios/P-9002").header("Authorization", AUTH))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.portfolioId").value("P-9002"))
                 .andExpect(jsonPath("$.label").value("Retirement"))
@@ -120,7 +121,7 @@ class PortfolioEndpointTests {
     @Test
     void mapsAccountsNestedUnderRelationships() throws Exception {
         reply(200, payload(true));
-        mvc.perform(get("/portfolios/P-9002"))
+        mvc.perform(get("/portfolios/P-9002").header("Authorization", AUTH))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.portfolioId").value("P-9002"))
                 .andExpect(jsonPath("$.clientId").value("abc123"))
@@ -135,7 +136,7 @@ class PortfolioEndpointTests {
                    "chg_1d":{"amt":30,"pct":0.000613},"since_inception_pct":0.187}]},
                  "meta":{"retrieved_at":"2026-10-03T12:00:00Z"}}
                 """);
-        mvc.perform(get("/portfolios/P-9001"))
+        mvc.perform(get("/portfolios/P-9001").header("Authorization", AUTH))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.label").hasJsonPath())
                 .andExpect(jsonPath("$.label").value(nullValue()))
@@ -151,7 +152,7 @@ class PortfolioEndpointTests {
     })
     void keepsEveryMissingOrNullOutputFieldPresent(String body) throws Exception {
         reply(200, body);
-        mvc.perform(get("/portfolios/P-9001"))
+        mvc.perform(get("/portfolios/P-9001").header("Authorization", AUTH))
                 .andExpect(status().isOk())
                 .andExpect(content().json("""
                         {"portfolioId":"P-9001","clientId":null,"label":null,"currency":null,
@@ -163,7 +164,7 @@ class PortfolioEndpointTests {
 
     @Test
     void mapsZeroValuesWithoutTreatingThemAsMissing() throws Exception {
-        mvc.perform(get("/portfolios/P-EMPTY"))
+        mvc.perform(get("/portfolios/P-EMPTY").header("Authorization", AUTH))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalMarketValue").value(0))
                 .andExpect(jsonPath("$.dayChangeAmount").value(0))
@@ -178,7 +179,7 @@ class PortfolioEndpointTests {
                   "curr_val":{"amt":9007199254740993.455,"ccy":"CAD"},
                   "chg_1d":{"amt":-1.235,"pct":0.1234565},"since_inception_pct":-0.1234565}]}}
                 """);
-        mvc.perform(get("/portfolios/P-9001"))
+        mvc.perform(get("/portfolios/P-9001").header("Authorization", AUTH))
                 .andExpect(status().isOk())
                 // Check the JSON number token directly; a double loses precision here.
                 .andExpect(content().string(containsString("\"totalMarketValue\":9007199254740993.46")))
@@ -260,7 +261,7 @@ class PortfolioEndpointTests {
     }
 
     private void assertError(String id, int expectedStatus, String error) throws Exception {
-        mvc.perform(get("/portfolios/{id}", id))
+        mvc.perform(get("/portfolios/{id}", id).header("Authorization", AUTH))
                 .andExpect(status().is(expectedStatus))
                 .andExpect(content().contentTypeCompatibleWith("application/json"))
                 .andExpect(jsonPath("$.error").value(error))

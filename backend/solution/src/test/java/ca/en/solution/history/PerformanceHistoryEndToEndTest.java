@@ -22,6 +22,8 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 class PerformanceHistoryEndToEndTest {
 
+    private static final String AUTH = "Bearer superday-demo-token";
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -29,7 +31,7 @@ class PerformanceHistoryEndToEndTest {
     void filtersAndSortsHistoryForEverySupportedRange() throws Exception {
         // Fixed UTC today: 2026-10-03. 1D starts 10-02; 1M starts 09-03;
         // YTD starts 01-01; 1Y starts 2025-10-03.
-        mockMvc.perform(get("/portfolios/P-9001/performance-history"))
+        mockMvc.perform(get("/portfolios/P-9001/performance-history").header("Authorization", AUTH))
                 .andExpect(status().isOk())
                 .andExpect(content().json("""
                         [
@@ -43,14 +45,14 @@ class PerformanceHistoryEndToEndTest {
                         ]
                         """, JsonCompareMode.STRICT));
 
-        mockMvc.perform(get("/portfolios/P-9001/performance-history?range=1D"))
+        mockMvc.perform(get("/portfolios/P-9001/performance-history?range=1D").header("Authorization", AUTH))
                 .andExpect(status().isOk())
                 .andExpect(content().json("""
                         [{"date":"2026-10-02","marketValue":48900.00},
                          {"date":"2026-10-03","marketValue":48930.00}]
                         """, JsonCompareMode.STRICT));
 
-        mockMvc.perform(get("/portfolios/P-9001/performance-history?range=1M"))
+        mockMvc.perform(get("/portfolios/P-9001/performance-history?range=1M").header("Authorization", AUTH))
                 .andExpect(status().isOk())
                 .andExpect(content().json("""
                         [{"date":"2026-09-03","marketValue":48500.00},
@@ -58,7 +60,7 @@ class PerformanceHistoryEndToEndTest {
                          {"date":"2026-10-03","marketValue":48930.00}]
                         """, JsonCompareMode.STRICT));
 
-        mockMvc.perform(get("/portfolios/P-9001/performance-history?range=YTD"))
+        mockMvc.perform(get("/portfolios/P-9001/performance-history?range=YTD").header("Authorization", AUTH))
                 .andExpect(status().isOk())
                 .andExpect(content().json("""
                         [{"date":"2026-01-01","marketValue":48000.00},
@@ -67,7 +69,7 @@ class PerformanceHistoryEndToEndTest {
                          {"date":"2026-10-03","marketValue":48930.00}]
                         """, JsonCompareMode.STRICT));
 
-        mockMvc.perform(get("/portfolios/P-9001/performance-history?range=1Y"))
+        mockMvc.perform(get("/portfolios/P-9001/performance-history?range=1Y").header("Authorization", AUTH))
                 .andExpect(status().isOk())
                 .andExpect(content().json("""
                         [{"date":"2025-10-03","marketValue":46000.00},
@@ -81,24 +83,24 @@ class PerformanceHistoryEndToEndTest {
 
     @Test
     void preservesTheAvailableHistoryAndReturnsStructuredErrors() throws Exception {
-        mockMvc.perform(get("/portfolios/P-9002/performance-history?range=1Y"))
+        mockMvc.perform(get("/portfolios/P-9002/performance-history?range=1Y").header("Authorization", AUTH))
                 .andExpect(status().isOk())
                 .andExpect(content().json("""
                         [{"date":"2026-08-05","marketValue":450.00},
                          {"date":"2026-10-03","marketValue":500.00}]
                         """, JsonCompareMode.STRICT));
 
-        mockMvc.perform(get("/portfolios/P-EMPTY/performance-history"))
+        mockMvc.perform(get("/portfolios/P-EMPTY/performance-history").header("Authorization", AUTH))
                 .andExpect(status().isOk())
                 .andExpect(content().json("[]", JsonCompareMode.STRICT));
 
-        mockMvc.perform(get("/portfolios/P-9001/performance-history?range=all"))
+        mockMvc.perform(get("/portfolios/P-9001/performance-history?range=all").header("Authorization", AUTH))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().json("""
                         {"error":"bad_request","message":"range must be one of: 1D, 1M, YTD, 1Y, All."}
                         """, JsonCompareMode.STRICT));
 
-        mockMvc.perform(get("/portfolios/UNKNOWN/performance-history"))
+        mockMvc.perform(get("/portfolios/UNKNOWN/performance-history").header("Authorization", AUTH))
                 .andExpect(status().isNotFound())
                 .andExpect(content().json("""
                         {"error":"not_found","message":"Portfolio 'UNKNOWN' was not found."}

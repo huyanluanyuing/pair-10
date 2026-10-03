@@ -55,6 +55,8 @@ Every decision the spec (`backend/REQUIREMENTS.md`) leaves open. Numbers are per
 
 **A21. The valid header is exactly `Bearer superday-demo-token`.** The token is from `requests.http` (inference) and is configurable. Missing header, wrong scheme, wrong token or empty token are all 401. Auth is checked first: 401 wins over 400 and 404. *(Answers Q20.)*
 
+**A36. The auth check covers every path, including routes that do not exist.** Without a valid token an unknown route is 401, not 404, so the API reveals nothing to an unauthenticated caller. Decided 2026-10-03 (MGK). The token is read from `auth.token`.
+
 ## Task 5: Allocation
 
 **A22. One entry per asset class that has at least one holding, even if its value is 0.** `percent` is 0 when `value` is 0. Order: `value` descending, then `assetClass` ascending. Unknown id is 404 (the spec does not say; inference from the other tasks). *(Answers Q21.)*

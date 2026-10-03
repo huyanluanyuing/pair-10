@@ -15,13 +15,15 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 class AllocationEndToEndTest {
 
+    private static final String AUTH = "Bearer superday-demo-token";
+
     @Autowired
     private MockMvc mockMvc;
 
     @Test
     void aggregatesMarketValuesByAssetClassInDescendingValueOrder() throws Exception {
         // Equity: 27300 + 0 = 27300; Fixed Income: 21630; total: 48930.
-        mockMvc.perform(get("/portfolios/P-9001/allocation"))
+        mockMvc.perform(get("/portfolios/P-9001/allocation").header("Authorization", AUTH))
                 .andExpect(status().isOk())
                 .andExpect(content().json("""
                         [{"assetClass":"Equity","value":27300.00,"percent":0.557940},
@@ -31,17 +33,17 @@ class AllocationEndToEndTest {
 
     @Test
     void supportsSingleClassEmptyAndUnknownPortfolios() throws Exception {
-        mockMvc.perform(get("/portfolios/P-SINGLE/allocation"))
+        mockMvc.perform(get("/portfolios/P-SINGLE/allocation").header("Authorization", AUTH))
                 .andExpect(status().isOk())
                 .andExpect(content().json("""
                         [{"assetClass":"Equity","value":2275.00,"percent":1.000000}]
                         """, JsonCompareMode.STRICT));
 
-        mockMvc.perform(get("/portfolios/P-EMPTY/allocation"))
+        mockMvc.perform(get("/portfolios/P-EMPTY/allocation").header("Authorization", AUTH))
                 .andExpect(status().isOk())
                 .andExpect(content().json("[]", JsonCompareMode.STRICT));
 
-        mockMvc.perform(get("/portfolios/UNKNOWN/allocation"))
+        mockMvc.perform(get("/portfolios/UNKNOWN/allocation").header("Authorization", AUTH))
                 .andExpect(status().isNotFound())
                 .andExpect(content().json("""
                         {"error":"not_found","message":"Portfolio 'UNKNOWN' was not found."}

@@ -21,6 +21,8 @@ import ca.en.solution.portfolio.PortfolioNotFoundException;
 @WebMvcTest(HoldingController.class)
 class HoldingControllerTest {
 
+    private static final String AUTH = "Bearer superday-demo-token";
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -34,7 +36,7 @@ class HoldingControllerTest {
                 new BigDecimal("0.00"), new BigDecimal("500.00"), new BigDecimal("1.000000"),
                 new BigDecimal("100.00"), new BigDecimal("500.00"), null)));
 
-        mockMvc.perform(get("/portfolios/P-9002/holdings"))
+        mockMvc.perform(get("/portfolios/P-9002/holdings").header("Authorization", AUTH))
                 .andExpect(status().isOk())
                 .andExpect(content().json("""
                         [{
@@ -58,7 +60,7 @@ class HoldingControllerTest {
     void aPortfolioWithoutHoldingsReturnsAnEmptyArray() throws Exception {
         given(holdingService.holdingsOf("P-EMPTY")).willReturn(List.of());
 
-        mockMvc.perform(get("/portfolios/P-EMPTY/holdings"))
+        mockMvc.perform(get("/portfolios/P-EMPTY/holdings").header("Authorization", AUTH))
                 .andExpect(status().isOk())
                 .andExpect(content().json("[]", JsonCompareMode.STRICT));
     }
@@ -67,7 +69,7 @@ class HoldingControllerTest {
     void anUnknownPortfolioReturns404WithTheErrorBody() throws Exception {
         given(holdingService.holdingsOf("UNKNOWN")).willThrow(new PortfolioNotFoundException("UNKNOWN"));
 
-        mockMvc.perform(get("/portfolios/UNKNOWN/holdings"))
+        mockMvc.perform(get("/portfolios/UNKNOWN/holdings").header("Authorization", AUTH))
                 .andExpect(status().isNotFound())
                 .andExpect(content().json("""
                         { "error": "not_found", "message": "Portfolio 'UNKNOWN' was not found." }

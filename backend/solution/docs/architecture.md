@@ -1,7 +1,7 @@
 # Architecture
 
 The design for the ten tasks in `requirements.md`. Decisions the spec leaves open are in `assumptions.md` (A-numbers).
-Built so far: `crm` and the portfolio metadata endpoint (Task 1); holdings and allocation in `holding` (Tasks 2 and 5); performance history in `history` (Task 3); `ledger` (Task 10); and in `common` the error body, the exception handler, UTC clock, rounding and seed loader. The client and cache packages remain future work.
+Built so far: `crm` and the portfolio metadata endpoint (Task 1); holdings and allocation in `holding` (Tasks 2 and 5); performance history in `history` (Task 3); `ledger` (Task 10); and in `common` the auth filter (Task 4), error body, exception handler, UTC clock, rounding and seed loader. The client and cache packages remain future work.
 
 ## 1. Decisions at a glance
 
@@ -39,7 +39,7 @@ Rules:
 
 ## 3. How a request flows
 
-`GET /portfolios/P-9001/holdings` (Task 2). Steps 3 to 8 are built; the auth filter in steps 1 and 2 arrives with Task 4.
+`GET /portfolios/P-9001/holdings` (Task 2), behind the auth filter (Task 4). Every step is built.
 
 ```mermaid
 sequenceDiagram
@@ -61,7 +61,7 @@ sequenceDiagram
 ```
 
 1. The request arrives with `Authorization: Bearer <token>`.
-2. The filter rejects a bad header with 401 before any route logic (A21).
+2. The filter rejects a bad header with 401 before any route logic, on every path (A21, A36). It writes the error body itself, because the exception handler only sees errors raised inside a controller.
 3. The controller checks the inputs and calls one service method.
 4. The service reads the portfolio; an unknown id throws not-found, which becomes 404.
 5. Quantity and average cost come from the transactions, never from stored fields (A17).
@@ -228,5 +228,6 @@ Reasoning:
 - **The Windows Maven wrapper fails on a null directory property in this environment.**
   `README.md` documents running the existing cached Maven installation directly.
 - **`src/main/resources/seed.json` is a copy of `backend/fixtures/seed.json`.** Acceptable: the app must run on its own. Next step: one source, or a database. Its holdings still carry `quantity` and `costBasisPerShare`; we ignore both and replay the transactions (A17).
-- **Only expected 400, 404 and 502 errors use our error body so far.** Unknown routes and unexpected errors still get Spring's default body, without a stack trace. Next step: the 401 handler arrives with Task 4.
-- **Endpoints are open until Task 4.** Acceptable for now: nothing is deployed. Next step: the auth filter, after which every web test must send the header.
+- **Only expected 400, 401, 404 and 502 errors use our error body so far.** With a valid token, an unknown route or an unexpected error still gets Spring's default body, without a stack trace.
+- **A browser on another origin cannot call the API.** There is no CORS setup, and the auth filter also rejects the browser's preflight `OPTIONS` request. Acceptable: this track is tested with an HTTP client. Next step: CORS configuration that lets `OPTIONS` through.
+- **Every web test must send the auth header.** The filter is a `@Component`, so it is active in `@WebMvcTest` slices too. Tests declare the header as a constant.

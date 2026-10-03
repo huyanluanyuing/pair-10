@@ -2,6 +2,7 @@ package ca.en.solution.holding;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.Test;
@@ -18,12 +19,14 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 class HoldingsEndToEndTest {
 
+    private static final String AUTH = "Bearer superday-demo-token";
+
     @Autowired
     private MockMvc mockMvc;
 
     @Test
     void theSeedPortfolioReturnsItsHoldingsInTickerOrderWithEveryCalculatedField() throws Exception {
-        mockMvc.perform(get("/portfolios/P-9001/holdings"))
+        mockMvc.perform(get("/portfolios/P-9001/holdings").header("Authorization", AUTH))
                 .andExpect(status().isOk())
                 .andExpect(content().json("""
                         [{
@@ -71,7 +74,7 @@ class HoldingsEndToEndTest {
 
     @Test
     void theSeedHoldingWithAZeroPreviousCloseReturnsANullDayChangePercent() throws Exception {
-        mockMvc.perform(get("/portfolios/P-9002/holdings"))
+        mockMvc.perform(get("/portfolios/P-9002/holdings").header("Authorization", AUTH))
                 .andExpect(status().isOk())
                 .andExpect(content().json("""
                         [{
@@ -93,14 +96,21 @@ class HoldingsEndToEndTest {
 
     @Test
     void theEmptySeedPortfolioReturnsAnEmptyArray() throws Exception {
-        mockMvc.perform(get("/portfolios/P-EMPTY/holdings"))
+        mockMvc.perform(get("/portfolios/P-EMPTY/holdings").header("Authorization", AUTH))
                 .andExpect(status().isOk())
                 .andExpect(content().json("[]", JsonCompareMode.STRICT));
     }
 
     @Test
-    void anUnknownPortfolioReturns404() throws Exception {
+    void anUnknownPortfolioWithoutATokenIs401Not404() throws Exception {
         mockMvc.perform(get("/portfolios/UNKNOWN/holdings"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("unauthorized"));
+    }
+
+    @Test
+    void anUnknownPortfolioReturns404() throws Exception {
+        mockMvc.perform(get("/portfolios/UNKNOWN/holdings").header("Authorization", AUTH))
                 .andExpect(status().isNotFound())
                 .andExpect(content().json("""
                         { "error": "not_found", "message": "Portfolio 'UNKNOWN' was not found." }

@@ -1,7 +1,7 @@
 # Architecture
 
 The design for the ten tasks in `requirements.md`. Decisions the spec leaves open are in `assumptions.md` (A-numbers).
-Built so far: `crm`, the portfolio metadata endpoint, and shared error handling (Task 1), plus `ledger` (Task 10). The other packages hold only a `package-info.java` until their task lands; sections 3 and 4 show the agreed target.
+Built so far: `crm` and the portfolio metadata endpoint (Task 1), the holdings list in `holding` (Task 2), `ledger` (Task 10), and in `common` the error body, the exception handler, rounding and the seed loader. The other packages hold only a `package-info.java` until their task lands; the cache steps in section 4 are the agreed target.
 
 ## 1. Decisions at a glance
 
@@ -39,7 +39,7 @@ Rules:
 
 ## 3. How a request flows
 
-Target flow for `GET /portfolios/P-9001/holdings` (Task 2).
+`GET /portfolios/P-9001/holdings` (Task 2). Steps 3 to 8 are built; the auth filter in steps 1 and 2 arrives with Task 4.
 
 ```mermaid
 sequenceDiagram
@@ -97,8 +97,9 @@ flowchart LR
   `asOf` is the CRM timestamp; Task 1 does not read a clock or persist local data.
 - `PortfolioService` receives the `CrmClient` interface through constructor
   injection. The controller calls only the service.
-- `common.ApiExceptionHandler` returns `{ error, message }`: 404 `not_found`
-  for an unknown account, or 502 `crm_unavailable` for an upstream failure.
+- `common.ApiExceptionHandler` returns `{ error, message }` (`common.ApiError`): 404
+  `not_found` for any `common.NotFoundException`, such as an unknown portfolio, or
+  502 `crm_unavailable` for an upstream failure. It is the only exception handler.
 - Redirects are disabled so every non-2xx CRM response reaches the status handler.
 - Task 1 has no authentication, cache, or stale fallback yet. The sequence below
   describes the target once Task 9 is implemented.
@@ -222,8 +223,10 @@ Reasoning:
 - **One fixed exchange rate, also for past dates.** Acceptable: the seed supplies one rate. Next step: dated rates (A28).
 - **Same-date transactions rely on input order.** Acceptable: dates carry no time. Next step: a timestamp or sequence number on transactions (A35).
 - **Stale CRM data has no maximum age.** Acceptable: the spec sets none. Next step: a stale limit (A32).
-- **The ledger replay has no endpoint yet.** It is used by Task 2 once that lands. Until then it is covered by unit tests only.
 - **Read timeouts bound inactivity, not total streaming duration.** A stalled
   CRM read times out after 2 seconds; there is no total download deadline.
 - **The Windows Maven wrapper fails on a null directory property in this environment.**
   `README.md` documents running the existing cached Maven installation directly.
+- **`src/main/resources/seed.json` is a copy of `backend/fixtures/seed.json`.** Acceptable: the app must run on its own. Next step: one source, or a database. Its holdings still carry `quantity` and `costBasisPerShare`; we ignore both and replay the transactions (A17).
+- **Only 404 and 502 use our error body so far.** Unknown routes and unexpected errors still get Spring's default body, without a stack trace. Next step: 400 and 401 handlers arrive with Tasks 3 and 4.
+- **Endpoints are open until Task 4.** Acceptable for now: nothing is deployed. Next step: the auth filter, after which every web test must send the header.

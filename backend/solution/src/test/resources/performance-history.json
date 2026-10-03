@@ -1,0 +1,19 @@
+{
+  "P-9001": [
+    { "date": "2026-10-03", "marketValue": 48930 },
+    { "date": "2025-09-30", "marketValue": 45000 },
+    { "date": "2026-01-01", "marketValue": 48000 },
+    { "date": "2026-09-03", "marketValue": 48500 },
+    { "date": "2025-10-03", "marketValue": 46000 },
+    { "date": "2026-10-02", "marketValue": 48900 },
+    { "date": "2025-12-31", "marketValue": 47000 }
+  ],
+  "P-9002": [
+    { "date": "2026-08-05", "marketValue": 450 },
+    { "date": "2026-10-03", "marketValue": 500 }
+  ],
+  "P-EMPTY": [],
+  "P-SINGLE": [
+    { "date": "2026-10-03", "marketValue": 2275 }
+  ]
+}

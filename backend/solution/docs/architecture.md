@@ -1,7 +1,7 @@
 # Architecture
 
 The design for the ten tasks in `requirements.md`. Decisions the spec leaves open are in `assumptions.md` (A-numbers).
-Built so far: `crm` and the portfolio metadata endpoint (Task 1), the holdings list in `holding` (Task 2), `ledger` (Task 10), and in `common` the error body, the exception handler, rounding and the seed loader. The other packages hold only a `package-info.java` until their task lands; the cache steps in section 4 are the agreed target.
+Built so far: `crm` and the portfolio metadata endpoint (Task 1); holdings and allocation in `holding` (Tasks 2 and 5); performance history in `history` (Task 3); `ledger` (Task 10); and in `common` the error body, the exception handler, UTC clock, rounding and seed loader. The client and cache packages remain future work.
 
 ## 1. Decisions at a glance
 
@@ -228,5 +228,5 @@ Reasoning:
 - **The Windows Maven wrapper fails on a null directory property in this environment.**
   `README.md` documents running the existing cached Maven installation directly.
 - **`src/main/resources/seed.json` is a copy of `backend/fixtures/seed.json`.** Acceptable: the app must run on its own. Next step: one source, or a database. Its holdings still carry `quantity` and `costBasisPerShare`; we ignore both and replay the transactions (A17).
-- **Only 404 and 502 use our error body so far.** Unknown routes and unexpected errors still get Spring's default body, without a stack trace. Next step: 400 and 401 handlers arrive with Tasks 3 and 4.
+- **Only expected 400, 404 and 502 errors use our error body so far.** Unknown routes and unexpected errors still get Spring's default body, without a stack trace. Next step: the 401 handler arrives with Task 4.
 - **Endpoints are open until Task 4.** Acceptable for now: nothing is deployed. Next step: the auth filter, after which every web test must send the header.
